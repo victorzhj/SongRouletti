@@ -4,22 +4,24 @@ const PORT: number = parseInt(process.env.PORT || "3000");
 
 const wss = new WebSocket.Server({ port: PORT });
 
-interface WebSocketWithRoom extends WebSocket {
+interface PlayerSocket extends WebSocket {
+  name: string
   room: string
+  points: number
 }
 
-let rooms: { [key: string]: WebSocketWithRoom[] } = {};
+let rooms: { [key: string]: PlayerSocket[] } = {};
 
-wss.on("connection", (ws: WebSocketWithRoom) => {
+wss.on("connection", (ws: PlayerSocket) => {
   console.log("New connection");
 
   ws.on("message", (message) => {
     if (message.toString() === "connections") {
-      const keys = Object.keys(rooms);
-      for (const key of keys) {
-        console.log(key);
-        console.log(rooms[key].length);
+      const info = {
+        room: ws.room,
+        userCount: rooms[ws.room].length
       }
+      ws.send(JSON.stringify(info))
       return;
     }
 
